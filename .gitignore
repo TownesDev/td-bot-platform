@@ -6,3 +6,4 @@ dist
 .env
 .vscode
 .env.local
+AGENT_ACTIONS.md

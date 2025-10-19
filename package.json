@@ -1,27 +1,65 @@
 {
   "name": "td-bot-platform",
   "version": "1.0.0",
-  "description": "",
+  "description": "TownesDev Bot Platform - Production-ready Discord Bot Platform with licensing, features, and management",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "npm run build:packages && npm run build:apps",
+    "build:packages": "npm run build -w packages/db && npm run build -w packages/types && npm run build -w packages/feature-sdk",
+    "build:apps": "npm run build -w apps/api && npm run build -w apps/bot-runner",
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:bot-runner\"",
+    "dev:api": "dotenv -e .env -- npm run dev -w apps/api",
+    "dev:bot-runner": "dotenv -e .env -- npm run dev -w apps/bot-runner",
+    "start": "concurrently \"npm run start:api\" \"npm run start:bot-runner\"",
+    "start:api": "dotenv -e .env -- npm run start -w apps/api",
+    "start:bot-runner": "dotenv -e .env -- npm run start -w apps/bot-runner",
+    "db:generate": "dotenv -e .env -- npm run db:generate -w packages/db",
+    "db:push": "dotenv -e .env -- npm run db:push -w packages/db",
+    "db:migrate": "dotenv -e .env -- npm run db:migrate -w packages/db",
+    "db:studio": "dotenv -e .env -- npm run db:studio -w packages/db",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "start:bg": "start /B npm run start > logs\\platform.log 2>&1",
+    "stop:bg": "taskkill /FI \"WINDOWTITLE eq npm run start\" /T /F 2>nul || echo No background services found",
+    "status": "node scripts/status.js",
+    "status:api": "node scripts/status-api.js",
+    "stop": "node scripts/stop.js",
+    "restart": "npm run stop && npm run start",
+    "lint": "echo \"Linting not yet configured\"",
+    "test": "echo \"Testing not yet configured\"",
+    "clean": "rm -rf apps/*/dist packages/*/dist"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "discord",
+    "bot",
+    "platform",
+    "licensing",
+    "features",
+    "management"
+  ],
+  "author": "TownesDev",
   "license": "ISC",
+  "private": true,
   "type": "module",
-  "private": "true",
   "devDependencies": {
-    "@types/node": "^24.8.1",
+    "@types/node": "^20.10.0",
+    "concurrently": "^8.2.2",
+    "dotenv-cli": "^10.0.0",
     "eslint": "^9.38.0",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   },
   "workspaces": [
     "packages/db",
-    "apps/api",
-    "apps/bot-runner",
     "packages/types",
-    "packages/feature-sdk"
-  ]
+    "packages/feature-sdk",
+    "apps/api",
+    "apps/bot-runner"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
 }

@@ -1,0 +1,184 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════
+// Core Tenant Management
+// ═══════════════════════════════════════════════════════════════════════════════════
+
+model Tenant {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Licensing & Plan Info
+  licenseKey    String  @unique
+  plan          String  @default("trial") // trial, bronze, silver, gold, enterprise
+  trialExpiresAt DateTime?
+  isActive      Boolean @default(true)
+
+  // Owner Information (from Discord OAuth)
+  ownerUserId   String  @unique // Discord user ID
+  ownerUsername String
+  ownerEmail    String?
+
+  // Feature Flags & Limits
+  maxGuilds     Int     @default(1)
+  aiTokensDaily Int     @default(1000)
+  
+  // Relations
+  guilds        Guild[]
+  usageCounters UsageCounter[]
+  auditLogs     AuditLog[]
+
+  @@map("tenants")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════
+// Guild (Discord Server) Management
+// ═══════════════════════════════════════════════════════════════════════════════════
+
+model Guild {
+  id        String   @id // Discord guild ID
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Basic Guild Info
+  name       String
+  iconUrl    String?
+  memberCount Int    @default(0)
+  
+  // Configuration
+  prefix     String  @default("!")
+  language   String  @default("en")
+  timezone   String  @default("UTC")
+  
+  // Status
+  isActive   Boolean @default(true)
+  
+  // Relations
+  tenantId      String
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  guildFeatures GuildFeature[]
+  auditLogs     AuditLog[]
+
+  @@map("guilds")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════
+// Feature System
+// ═══════════════════════════════════════════════════════════════════════════════════
+
+model Feature {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Feature Identity
+  key         String  @unique // e.g., "welcome", "xp", "ai-concierge"
+  name        String  // Display name
+  description String?
+  category    String  @default("general") // general, moderation, engagement, ai
+  
+  // Feature Metadata
+  version     String  @default("1.0.0")
+  isBuiltIn   Boolean @default(true)
+  isPremium   Boolean @default(false)
+  
+  // Configuration Schema (JSON)
+  configSchema Json?   // JSON schema for feature configuration
+  defaultConfig Json?  // Default configuration values
+  
+  // Relations
+  guildFeatures GuildFeature[]
+
+  @@map("features")
+}
+
+model GuildFeature {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Feature State
+  isEnabled Boolean @default(false)
+  config    Json?   // Feature-specific configuration
+  
+  // Relations
+  guildId   String
+  guild     Guild   @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  featureId String
+  feature   Feature @relation(fields: [featureId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, featureId])
+  @@map("guild_features")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════
+// Usage Tracking & Analytics
+// ═══════════════════════════════════════════════════════════════════════════════════
+
+model UsageCounter {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Counter Identity
+  type      String   // e.g., "events_processed", "ai_tokens_used", "commands_executed"
+  date      DateTime @db.Date
+  
+  // Counter Values
+  count     Int      @default(0)
+  metadata  Json?    // Additional context (feature, command, etc.)
+  
+  // Relations
+  tenantId  String?
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  guildId   String?
+  
+  @@unique([tenantId, guildId, type, date])
+  @@map("usage_counters")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════
+// Audit Logging & Security
+// ═══════════════════════════════════════════════════════════════════════════════════
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // Event Identity
+  action    String   // e.g., "feature.enabled", "guild.added", "license.activated"
+  entity    String   // e.g., "guild", "feature", "tenant"
+  entityId  String   // ID of the affected entity
+  
+  // Event Context
+  userId    String?  // Discord user ID who triggered the action
+  username  String?  // Discord username for context
+  metadata  Json?    // Additional event data
+  
+  // Request Context
+  requestId String?  // For correlation with logs
+  ipAddress String?
+  userAgent String?
+  
+  // Relations
+  tenantId  String?
+  tenant    Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  guildId   String?
+  guild     Guild?  @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+  @@index([guildId, createdAt])
+  @@index([action, createdAt])
+  @@map("audit_logs")
+}
