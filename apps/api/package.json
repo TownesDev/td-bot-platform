@@ -1,22 +1,39 @@
 {
   "name": "api",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "TownesDev Bot Platform API - REST/tRPC server for licensing, auth, and management",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "tsx src/index.ts"
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "api",
+    "fastify",
+    "discord",
+    "bot",
+    "licensing"
+  ],
+  "author": "TownesDev",
   "license": "ISC",
   "type": "module",
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  },
   "dependencies": {
     "@fastify/cors": "^11.1.0",
+    "@fastify/env": "^5.0.3",
+    "@fastify/helmet": "^13.0.2",
+    "@fastify/rate-limit": "^10.3.0",
     "@fastify/under-pressure": "^9.0.3",
     "fastify": "^5.6.1",
+    "nanoid": "^5.0.0",
     "pino": "^10.1.0",
     "pino-pretty": "^13.1.2",
-    "zod": "^4.1.12"
+    "zod": "^3.22.4"
   }
 }

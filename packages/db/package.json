@@ -1,18 +1,31 @@
 {
   "name": "db",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Database package with Prisma client and schema",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "tsx src/index.ts"
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:reset": "prisma migrate reset",
+    "db:studio": "prisma studio"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "prisma",
+    "database",
+    "discord",
+    "bot"
+  ],
+  "author": "TownesDev",
   "license": "ISC",
   "type": "module",
   "devDependencies": {
-    "prisma": "^6.17.1"
+    "@types/node": "^20.10.0",
+    "prisma": "^6.17.1",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "@prisma/client": "^6.17.1"
