@@ -7,3 +7,4 @@ dist
 .vscode
 .env.local
 AGENT_ACTIONS.md
+PR_DESCRIPTION.md
